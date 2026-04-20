@@ -6,6 +6,16 @@ window.LADDER_DATA = {
     "date": "2025-04-21"
   },
   {
+    "url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSpwVqEZYUP9xoLrhxA8m52yKb4MBjysFhGcW-D_XMiNjGRO9ckcwTuIx3OwUvdCX8kNdVES2Ty_Xej0xx4e1AQg1s1rEv0ysRbjJGvZkWTiCSMTWXsXA&s=10&ec=121644689",
+    "name": "Enrique Pinti",
+    "date": "2022-03-27"
+  },
+  {
+    "url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSWcBe-tP9z9l9SBOfw2ObgRc9gbZxRQOPVirXYpeW6I2afytYcgqfkpJouAcDAhHh_8i41WoPZDyxPrZACxOomgFcLkl1T6p38VxA6sX4nFVeeeTYhNg&s=10&ec=121644689",
+    "name": "Antonio Gasalla",
+    "date": "2025-03-18"
+  },    
+  {
     "url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRaSQL33NHGyE7bqN0yMRcRuEH1IPy53nAATVtN5eZczRXjg8Hc2qCVxlnOfdGd56Cw6D-25jd9H1yfOw&s&ec=121644689",
     "name": "Mario Vargas Llosa",
     "date": "2025-04-13"

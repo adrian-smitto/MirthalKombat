@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MirtaKombat</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0a0a0a;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+    }
+
+    h1 {
+      color: #cc0000;
+      font-family: 'Georgia', serif;
+      font-size: clamp(1.4rem, 4vw, 2.2rem);
+      text-transform: uppercase;
+      letter-spacing: 6px;
+      margin-bottom: 20px;
+      text-shadow: 0 0 24px #ff0000aa;
+    }
+
+    #ladder-section {
+      position: relative;
+      width: min(480px, 92vw);
+    }
+
+    #ladder {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      width: 100%;
+      line-height: 0;
+    }
+
+    .step-wrapper {
+      position: relative;
+      width: 100%;
+      line-height: 0;
+    }
+
+    /* Step background — natural width:100%, height follows aspect ratio */
+    .step-bg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* Portrait overlay — all geometry set in pixels by JS */
+    .portrait-overlay {
+      position: absolute;
+      object-fit: cover;
+      overflow: hidden;
+      pointer-events: none;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    .portrait-error {
+      position: absolute;
+      background: #1a1a1a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #555;
+      font-family: serif;
+      font-size: 1.4em;
+      pointer-events: none;
+    }
+
+    #player-portrait {
+      position: absolute;
+      right: calc(100% + 10px);
+      transform: translateY(-50%);
+      width: min(72px, 15vw);
+      height: min(72px, 15vw);
+      object-fit: cover;
+      border: 2px solid #cc0000;
+      box-shadow: 0 0 12px #cc000099;
+      display: none;
+    }
+
+    #status {
+      color: #444;
+      font-family: sans-serif;
+      font-size: 12px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>MirtaKombat</h1>
+  <div id="ladder-section">
+    <div id="ladder"></div>
+  </div>
+  <div id="status">Loading…</div>
+
+  <script src="data.js"></script>
+  <script>
+    const STEP_IMAGE = 'assets/ladderStep.png';
+
+    function generateQuestionMark(size = 256) {
+      const c = document.createElement('canvas');
+      c.width = c.height = size;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#111';
+      ctx.fillRect(0, 0, size, size);
+      ctx.fillStyle = '#cc0000';
+      ctx.font = `bold ${Math.round(size * 0.72)}px Georgia, serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('?', size / 2, size / 2 + size * 0.04);
+      return c.toDataURL('image/png');
+    }
+
+    function detectGreenArea(imgSrc) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+          const iw = img.naturalWidth, ih = img.naturalHeight;
+
+          function fallback() {
+            // Measured from the 192×98 step PNG; scales proportionally.
+            resolve({
+              x: Math.round(109 * iw / 192), y: Math.round(23 * ih / 98),
+              w: Math.round(48  * iw / 192), h: Math.round(61 * ih / 98),
+              imgW: iw, imgH: ih
+            });
+          }
+
+          let px;
+          try {
+            const cvs = document.createElement('canvas');
+            cvs.width = iw; cvs.height = ih;
+            cvs.getContext('2d').drawImage(img, 0, 0);
+            px = cvs.getContext('2d').getImageData(0, 0, iw, ih).data;
+          } catch (_) { return fallback(); }
+
+          let x1 = iw, y1 = ih, x2 = -1, y2 = -1;
+          for (let y = 0; y < ih; y++)
+            for (let x = 0; x < iw; x++) {
+              const i = (y * iw + x) * 4;
+              if (px[i] === 0 && px[i+1] === 128 && px[i+2] === 0) {
+                if (x < x1) x1 = x; if (x > x2) x2 = x;
+                if (y < y1) y1 = y; if (y > y2) y2 = y;
+              }
+            }
+
+          x2 >= 0
+            ? resolve({ x: x1, y: y1, w: x2-x1+1, h: y2-y1+1, imgW: iw, imgH: ih })
+            : fallback();
+        };
+        img.onerror = () => reject(new Error('Cannot load step image: ' + imgSrc));
+        img.src = imgSrc;
+      });
+    }
+
+    // All overlay elements that need repositioning on resize
+    const overlays = [];
+
+    // Compute pixel position of the green area given the current rendered step width
+    function computePx(renderW, area) {
+      const renderH = renderW * area.imgH / area.imgW;
+      const left   = Math.round(renderW * area.x / area.imgW);
+      const top    = Math.round(renderH * area.y / area.imgH);
+      const right  = Math.round(renderW * (area.x + area.w) / area.imgW);
+      const bottom = Math.round(renderH * (area.y + area.h) / area.imgH);
+      // Expand 1px left and top to cover sub-pixel green bleed on those edges;
+      // right and bottom are derived from the far edge so they stay exact.
+      return {
+        left:   left - 1,
+        top:    top  - 1,
+        width:  right  - left + 1,
+        height: bottom - top  + 1,
+      };
+    }
+
+    function applyPx(el, px) {
+      el.style.left   = px.left   + 'px';
+      el.style.top    = px.top    + 'px';
+      el.style.width  = px.width  + 'px';
+      el.style.height = px.height + 'px';
+    }
+
+    function renderStep(portraitSrc, area) {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'step-wrapper';
+
+      const bg = document.createElement('img');
+      bg.className = 'step-bg';
+      bg.src = STEP_IMAGE;
+      bg.alt = '';
+      wrapper.appendChild(bg);
+
+      if (!portraitSrc) return wrapper;
+
+      const portrait = document.createElement('img');
+      portrait.className = 'portrait-overlay';
+      portrait.src = portraitSrc;
+      portrait.alt = '';
+
+      portrait.onerror = () => {
+        portrait.remove();
+        const fb = document.createElement('div');
+        fb.className = 'portrait-error';
+        // Copy the pixel position from what portrait had
+        fb.style.cssText = portrait.style.cssText;
+        fb.textContent = '?';
+        wrapper.appendChild(fb);
+        overlays.push(fb);
+      };
+
+      wrapper.appendChild(portrait);
+      overlays.push(portrait);
+      return wrapper;
+    }
+
+    async function buildLadder() {
+      const sectionEl = document.getElementById('ladder-section');
+      const ladderEl  = document.getElementById('ladder');
+      const statusEl  = document.getElementById('status');
+
+      try {
+        const data            = window.LADDER_DATA || {};
+        const portraits       = Array.isArray(data.portraits) ? data.portraits : [];
+        const playerSrc       = data.playerPortrait || null;
+        const questionPortrait = data.questionMarkPortrait || generateQuestionMark();
+
+        const area = await detectGreenArea(STEP_IMAGE);
+
+        const steps = [questionPortrait, ...portraits.slice().reverse()];
+        ladderEl.innerHTML = '';
+        overlays.length = 0;
+
+        for (const src of steps) ladderEl.appendChild(renderStep(src, area));
+
+        // Position all overlays in pixels and keep them in sync on resize
+        function positionAll() {
+          const px = computePx(sectionEl.offsetWidth, area);
+          for (const el of overlays) applyPx(el, px);
+        }
+
+        positionAll();
+        new ResizeObserver(positionAll).observe(sectionEl);
+
+        // Player portrait — left of the ladder, centred on the seam between step 0 and 1
+        if (playerSrc) {
+          const playerEl = document.createElement('img');
+          playerEl.id  = 'player-portrait';
+          playerEl.src = playerSrc;
+          playerEl.alt = 'Player';
+
+          function positionPlayer() {
+            const stepH = sectionEl.offsetWidth * (area.imgH / area.imgW);
+            playerEl.style.top = stepH + 'px';
+          }
+          positionPlayer();
+          new ResizeObserver(positionPlayer).observe(sectionEl);
+
+          playerEl.onerror = () => playerEl.remove();
+          playerEl.onload  = () => { playerEl.style.display = 'block'; };
+          sectionEl.appendChild(playerEl);
+        }
+
+        statusEl.textContent = `${steps.length} steps`;
+      } catch (err) {
+        ladderEl.innerHTML = `<p style="color:#c00;font-family:sans-serif;padding:16px">Error: ${err.message}</p>`;
+        statusEl.textContent = '';
+      }
+    }
+
+    buildLadder();
+  </script>
+</body>
+</html>

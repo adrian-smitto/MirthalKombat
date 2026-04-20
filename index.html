@@ -188,7 +188,7 @@
       el.style.height = px.height + 'px';
     }
 
-    function renderStep(portraitSrc, area, name = '') {
+    function renderStep(portraitSrc, area, name = '', date = '') {
       const wrapper = document.createElement('div');
       wrapper.className = 'step-wrapper';
 
@@ -203,8 +203,9 @@
       const portrait = document.createElement('img');
       portrait.className = 'portrait-overlay';
       portrait.src = portraitSrc;
-      portrait.alt   = name;
-      portrait.title = name;
+      const label = date ? `${name} - ${date}` : name;
+      portrait.alt   = label;
+      portrait.title = label;
 
       portrait.onerror = () => {
         portrait.remove();
@@ -250,14 +251,14 @@
           });
 
         const steps = [
-          { url: questionPortrait, name: '' },
+          { url: questionPortrait, name: '', date: '' },
           ...normalised.slice().reverse(),
         ];
 
         ladderEl.innerHTML = '';
         overlays.length = 0;
 
-        for (const { url, name } of steps) ladderEl.appendChild(renderStep(url, area, name));
+        for (const { url, name, date } of steps) ladderEl.appendChild(renderStep(url, area, name, date));
 
         // Position all overlays in pixels and keep them in sync on resize
         function positionAll() {

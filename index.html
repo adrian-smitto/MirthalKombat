@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MirtaKombat</title>
+  <title>Mirthal Kombat</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -29,7 +29,7 @@
 
     #ladder-section {
       position: relative;
-      width: min(480px, 92vw);
+      width: min(600px, 88vw);
     }
 
     #ladder {
@@ -58,7 +58,6 @@
       position: absolute;
       object-fit: cover;
       overflow: hidden;
-      pointer-events: none;
       user-select: none;
       -webkit-user-drag: none;
     }
@@ -77,13 +76,12 @@
 
     #player-portrait {
       position: absolute;
-      right: calc(100% + 10px);
+      /* left, top, width, height all set by JS */
       transform: translateY(-50%);
-      width: min(72px, 15vw);
-      height: min(72px, 15vw);
       object-fit: cover;
       border: 2px solid #cc0000;
       box-shadow: 0 0 12px #cc000099;
+      z-index: 1;
       display: none;
     }
 
@@ -96,7 +94,8 @@
   </style>
 </head>
 <body>
-  <h1>MirtaKombat</h1>
+  <img src="mirthalkombatlogo.jpg" style="width:20%;height:20%;"></img>
+</br>
   <div id="ladder-section">
     <div id="ladder"></div>
   </div>
@@ -189,7 +188,7 @@
       el.style.height = px.height + 'px';
     }
 
-    function renderStep(portraitSrc, area) {
+    function renderStep(portraitSrc, area, name = '') {
       const wrapper = document.createElement('div');
       wrapper.className = 'step-wrapper';
 
@@ -204,7 +203,8 @@
       const portrait = document.createElement('img');
       portrait.className = 'portrait-overlay';
       portrait.src = portraitSrc;
-      portrait.alt = '';
+      portrait.alt   = name;
+      portrait.title = name;
 
       portrait.onerror = () => {
         portrait.remove();
@@ -228,18 +228,36 @@
       const statusEl  = document.getElementById('status');
 
       try {
-        const data            = window.LADDER_DATA || {};
-        const portraits       = Array.isArray(data.portraits) ? data.portraits : [];
+        const data      = window.LADDER_DATA || {};
+        const portraits = Array.isArray(data.portraits) ? data.portraits : [];
         const playerSrc       = data.playerPortrait || null;
         const questionPortrait = data.questionMarkPortrait || generateQuestionMark();
 
         const area = await detectGreenArea(STEP_IMAGE);
 
-        const steps = [questionPortrait, ...portraits.slice().reverse()];
+        // Normalise each portrait entry — accept either a plain URL string
+        // or an object with { url, name, date }; missing fields default to ''.
+        // Entries without a date sort to the top (nearest the player).
+        const normalised = portraits
+          .map(p => typeof p === 'string'
+            ? { url: p, name: '', date: '' }
+            : { url: p.url || '', name: p.name || '', date: p.date || '' }
+          )
+          .sort((a, b) => {
+            const da = a.date || '9999-12-31';
+            const db = b.date || '9999-12-31';
+            return da < db ? -1 : da > db ? 1 : 0;
+          });
+
+        const steps = [
+          { url: questionPortrait, name: '' },
+          ...normalised.slice().reverse(),
+        ];
+
         ladderEl.innerHTML = '';
         overlays.length = 0;
 
-        for (const src of steps) ladderEl.appendChild(renderStep(src, area));
+        for (const { url, name } of steps) ladderEl.appendChild(renderStep(url, area, name));
 
         // Position all overlays in pixels and keep them in sync on resize
         function positionAll() {
@@ -258,8 +276,17 @@
           playerEl.alt = 'Player';
 
           function positionPlayer() {
-            const stepH = sectionEl.offsetWidth * (area.imgH / area.imgW);
-            playerEl.style.top = stepH + 'px';
+            const renderW = sectionEl.offsetWidth;
+            const px = computePx(renderW, area);
+            const stepH = renderW * (area.imgH / area.imgW);
+            // Centre the player portrait horizontally in the left portion of the
+            // stone block (the space to the left of the green area).
+            const leftAreaW = Math.round(renderW * area.x / area.imgW);
+            const playerLeft = Math.round((leftAreaW - px.width) / 2);
+            playerEl.style.left   = playerLeft + 'px';
+            playerEl.style.top    = stepH + 'px';
+            playerEl.style.width  = px.width  + 'px';
+            playerEl.style.height = px.height + 'px';
           }
           positionPlayer();
           new ResizeObserver(positionPlayer).observe(sectionEl);
@@ -269,7 +296,6 @@
           sectionEl.appendChild(playerEl);
         }
 
-        statusEl.textContent = `${steps.length} steps`;
       } catch (err) {
         ladderEl.innerHTML = `<p style="color:#c00;font-family:sans-serif;padding:16px">Error: ${err.message}</p>`;
         statusEl.textContent = '';

@@ -1,6 +1,11 @@
 window.LADDER_DATA = {
   "portraits": [
   {
+    "url": "https://www.fundacionkonex.org/custom/web/data/imagenes/repositorio/2010/6/1/1132/20160316110742ae5e3ce40e0404a45ecacaaf05e5f735.jpg",
+    "name": "Indio Solari",
+    "date": "2025-06-02"
+  },  
+  {
     "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/Pope_Francis_Korea_Haemi_Castle_19_%284x5_cropped%29.jpg/250px-Pope_Francis_Korea_Haemi_Castle_19_%284x5_cropped%29.jpg",
     "name": "Papa Francisco",
     "date": "2025-04-21"

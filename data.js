@@ -1,6 +1,11 @@
 window.LADDER_DATA = {
   "portraits": [
   {
+    "url": "https://imgs.elpais.com.uy/dims4/default/b93310f/2147483647/strip/true/crop/959x659+0+0/resize/1440x990!/format/webp/quality/90/?url=https%3A%2F%2Fel-pais-uruguay-production-web.s3.us-east-1.amazonaws.com%2Fbrightspot%2F14%2F5c%2Fd7881006496db8b1cd13de3ba826%2Fchiche-gelblung.jpg",
+    "name": "Chiche Gelblung",
+    "date": "2026-09-09"
+  },
+  {
     "url": "https://www.fundacionkonex.org/custom/web/data/imagenes/repositorio/2010/6/1/1132/20160316110742ae5e3ce40e0404a45ecacaaf05e5f735.jpg",
     "name": "Indio Solari",
     "date": "2026-06-02"

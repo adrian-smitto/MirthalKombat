@@ -74,6 +74,22 @@
       pointer-events: none;
     }
 
+    .step-name {
+      position: absolute;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      font-family: 'Georgia', serif;
+      font-weight: bold;
+      text-align: center;
+      line-height: 1.15;
+      overflow: hidden;
+      text-shadow: 0 1px 3px #000, 0 0 6px #000;
+      padding: 0 4%;
+      pointer-events: none;
+    }
+
     #player-portrait {
       position: absolute;
       /* left, top, width, height all set by JS */
@@ -163,6 +179,8 @@
 
     // All overlay elements that need repositioning on resize
     const overlays = [];
+    // Name-plate captions, anchored to the bottom of each portrait
+    const nameOverlays = [];
 
     // Compute pixel position of the green area given the current rendered step width
     function computePx(renderW, area) {
@@ -186,6 +204,12 @@
       el.style.top    = px.top    + 'px';
       el.style.width  = px.width  + 'px';
       el.style.height = px.height + 'px';
+    }
+
+    // Name plate sits on the stone frame to the left of the portrait cutout
+    function computeNamePx(renderW, area) {
+      const renderH = renderW * area.imgH / area.imgW;
+      return { left: 0, top: 0, width: Math.round(renderW * area.x / area.imgW), height: Math.round(renderH) };
     }
 
     function renderStep(portraitSrc, area, name = '', date = '') {
@@ -220,6 +244,16 @@
 
       wrapper.appendChild(portrait);
       overlays.push(portrait);
+
+      if (name) {
+        const nameEl = document.createElement('div');
+        nameEl.className = 'step-name';
+        nameEl.textContent = name;
+        nameEl.title = label;
+        wrapper.appendChild(nameEl);
+        nameOverlays.push(nameEl);
+      }
+
       return wrapper;
     }
 
@@ -257,13 +291,22 @@
 
         ladderEl.innerHTML = '';
         overlays.length = 0;
+        nameOverlays.length = 0;
 
         for (const { url, name, date } of steps) ladderEl.appendChild(renderStep(url, area, name, date));
 
         // Position all overlays in pixels and keep them in sync on resize
         function positionAll() {
-          const px = computePx(sectionEl.offsetWidth, area);
+          const renderW = sectionEl.offsetWidth;
+          const px = computePx(renderW, area);
           for (const el of overlays) applyPx(el, px);
+
+          const namePx = computeNamePx(renderW, area);
+          const fontSize = Math.max(8, Math.round(namePx.height * 0.15));
+          for (const el of nameOverlays) {
+            applyPx(el, namePx);
+            el.style.fontSize = fontSize + 'px';
+          }
         }
 
         positionAll();

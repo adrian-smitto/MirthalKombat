@@ -77,7 +77,7 @@
     .step-name {
       position: absolute;
       display: flex;
-      align-items: center;
+      align-items: flex-end;
       justify-content: center;
       color: #ffffff;
       font-family: 'Georgia', serif;
@@ -302,10 +302,11 @@
           for (const el of overlays) applyPx(el, px);
 
           const namePx = computeNamePx(renderW, area);
-          const fontSize = Math.max(8, Math.round(namePx.height * 0.15));
+          const fontSize = Math.max(7, Math.round(namePx.height * 0.135));
           for (const el of nameOverlays) {
             applyPx(el, namePx);
             el.style.fontSize = fontSize + 'px';
+            el.style.paddingBottom = Math.round(namePx.height * 0.1) + 'px';
           }
         }
 

@@ -1,6 +1,11 @@
 window.LADDER_DATA = {
   "portraits": [
   {
+    "url": "https://assets.dev-filo.dift.io/img/2018/04/03/oro_sq.jpg",
+    "name": "Oscar Gonzalez Oro",
+    "date": "2026-09-25"
+  },
+  {
     "url": "https://imgs.elpais.com.uy/dims4/default/b93310f/2147483647/strip/true/crop/959x659+0+0/resize/1440x990!/format/webp/quality/90/?url=https%3A%2F%2Fel-pais-uruguay-production-web.s3.us-east-1.amazonaws.com%2Fbrightspot%2F14%2F5c%2Fd7881006496db8b1cd13de3ba826%2Fchiche-gelblung.jpg",
     "name": "Chiche Gelblung",
     "date": "2026-09-09"

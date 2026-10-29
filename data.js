@@ -1,6 +1,11 @@
 window.LADDER_DATA = {
   "portraits": [
   {
+    "url": "https://upload.wikimedia.org/wikipedia/commons/8/87/Patrick_Stewart_by_Gage_Skidmore_2.jpg",
+    "name": "Patrick Stewart",
+    "date": "2026-10-29"
+  },
+  {
     "url": "https://assets.dev-filo.dift.io/img/2018/04/03/oro_sq.jpg",
     "name": "Oscar Gonzalez Oro",
     "date": "2026-09-25"
